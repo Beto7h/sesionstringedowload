@@ -5,10 +5,7 @@ services:
     build: .
     container_name: sesionstring_bot
     restart: unless-stopped
-    # Aquí es donde leerá el BOT_TOKEN, API_ID, DATABASE_URL, etc.
-    env_file:
-      - .env
     volumes:
-      # Volúmenes para mantener sesiones o descargas si el bot se reinicia
+      # Mantiene a salvo tus sesiones y descargas si el contenedor se reinicia o actualiza
       - ./sessions:/app/sessions
       - ./downloads:/app/downloads
