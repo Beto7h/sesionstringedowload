@@ -1,0 +1,5 @@
+pyrogram
+TgCrypto
+psutil
+requests
+motor
