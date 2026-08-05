@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  telegram-bot:
+    build: .
+    container_name: sesionstring_bot
+    restart: unless-stopped
+    # Aquí es donde leerá el BOT_TOKEN, API_ID, DATABASE_URL, etc.
+    env_file:
+      - .env
+    volumes:
+      # Volúmenes para mantener sesiones o descargas si el bot se reinicia
+      - ./sessions:/app/sessions
+      - ./downloads:/app/downloads
