@@ -3,7 +3,9 @@ services:
     build: .
     container_name: sesionstring_bot
     restart: unless-stopped
+    env_file:
+      - .env
     volumes:
-      # Mantiene a salvo tus sesiones y descargas si el contenedor se reinicia o actualiza
       - ./sessions:/app/sessions
       - ./downloads:/app/downloads
+      
