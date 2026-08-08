@@ -12,6 +12,16 @@ def format_bytes(size):
         n += 1
     return f"{size:.2f}{power_labels[n]}"
 
+def format_time(seconds):
+    m, s = divmod(int(seconds), 60)
+    h, m = divmod(m, 60)
+    if h > 0:
+        return f"{h}h{m}m{s}s"
+    elif m > 0:
+        return f"{m}m{s}s"
+    else:
+        return f"{s}s"
+
 async def progress_bar(current, total, status_msg, start_time, file_name, task_by_name, task_by_id):
     now = time.time()
     diff = now - start_time
@@ -44,7 +54,7 @@ async def progress_bar(current, total, status_msg, start_time, file_name, task_b
         f"┠ Estado → Descargando\n"
         f"┠ Velocidad → {format_bytes(speed)}/s\n"
         f"┠ Tiempo → {time_to_completion}s\n"
-        f"┠ Motor → Pyrogram/Wzgram\n" # Ajustado a la realidad del motor
+        f"┠ Motor → Pyrogram/Wzgram\n" 
         f"┠ In Mode → #Telegram\n"
         f"┠ Out Mode → #Leech\n"
         f"┖ Stop → /cancel\n\n"
