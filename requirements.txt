@@ -1,5 +1,7 @@
-pyrogram
-TgCrypto
-psutil
-requests
-motor
+pyrogram>=2.0.0
+tgcrypto
+python-dotenv
+wzgram
+aiohttp
+motor          # Para MongoDB
+psutil         # Para las estadísticas de CPU/RAM
