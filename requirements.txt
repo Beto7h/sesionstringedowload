@@ -1,7 +1,8 @@
 pyrogram>=2.0.0
+pyromod
 tgcrypto
 python-dotenv
 wzgram
 aiohttp
-motor          # Para MongoDB
-psutil         # Para las estadísticas de CPU/RAM
+motor
+psutil
