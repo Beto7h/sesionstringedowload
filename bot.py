@@ -9,7 +9,7 @@ bot = Client(
     api_id=Config.API_ID,
     api_hash=Config.API_HASH,
     bot_token=Config.BOT_TOKEN,
-    plugins=dict(root="plugins") # 
+    plugins=dict(root="plugins")
 )
 
 # Servidor de salud para Koyeb
@@ -26,9 +26,12 @@ async def web_server():
     print(f"Servidor web en puerto {Config.PORT}")
 
 async def main():
-    print("Iniciando Bot...")
-    await bot.start()
+    print("Iniciando Servidor Web...")
     await web_server()
+    
+    print("Iniciando Bot de Telegram...")
+    await bot.start()
+    print("¡Bot conectado exitosamente!")
     
     from pyrogram import idle
     await idle()
