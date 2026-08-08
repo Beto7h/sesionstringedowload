@@ -3,7 +3,7 @@ import time
 from pyrogram import Client, filters
 from config import Config
 from database import get_user_config
-from utils import progress_bar
+from utils import progress_bar, format_bytes, format_time # <-- Importaciones actualizadas
 import wzgram # Asumiendo que esta es tu librería de subida
 
 # Cliente extra con la cuenta premium del DUEÑO para archivos pesados
@@ -27,11 +27,20 @@ async def leech_cmd(client, message):
 
     status_msg = await message.reply_text("🔄 **Iniciando proceso...**")
     
+    # Inicializar variables para asegurar que el bloque finally no falle
+    file_path = None
+    thumb_path = None
+    
     try:
         chat_id = int("-100" + link.split("/")[-2])
         msg_id = int(link.split("/")[-1])
         
         msg_to_download = await user_client.get_messages(chat_id, msg_id)
+        
+        if not msg_to_download.media:
+            await user_client.stop()
+            return await status_msg.edit_text("❌ El enlace no contiene ningún archivo multimedia.")
+
         file_size = msg_to_download.document.file_size if msg_to_download.document else msg_to_download.video.file_size
         file_name = msg_to_download.document.file_name if msg_to_download.document else "video.mp4"
         
@@ -47,8 +56,7 @@ async def leech_cmd(client, message):
         await user_client.stop()
 
         # 2. PROCESAMIENTO (Miniatura 1:30 si está activo)
-        thumb_path = None
-        if config.get("hd_thumbnail_active"):
+        if config.get("hd_thumbnail_active") and (file_name.endswith('.mp4') or file_name.endswith('.mkv')):
             await status_msg.edit_text("🎬 **Extrayendo miniatura HD al minuto 1:30...**")
             thumb_path = f"downloads/thumb_{user_id}.jpg"
             os.system(f"ffmpeg -ss 00:01:30 -i '{file_path}' -vframes 1 -q:v 2 '{thumb_path}' -y")
@@ -78,7 +86,26 @@ async def leech_cmd(client, message):
                 thumb=thumb_path
             )
 
-        await status_msg.edit_text("✅ **¡Descarga y subida completada!**")
+        # 5. MENSAJE FINAL
+        end_time = time.time()
+        time_taken = format_time(end_time - start_time)
+        
+        action_text = "Los archivos se han enviado al Privado (PM)" if config.get("pm_mode") else "Los archivos se han enviado al Grupo"
+        
+        final_text = (
+            f"**{file_name}**\n"
+            f"│\n"
+            f"┟ Tamaño de Tarea → {format_bytes(file_size)}\n"
+            f"┠ Tiempo Tomado → {time_taken}\n"
+            f"┠ Modo de Entrada → #Telegram\n"
+            f"┠ Modo de Salida → #Leech\n"
+            f"┠ Total de Archivos: 1\n"
+            f"┖ Tarea Por → {message.from_user.mention}\n\n"
+            f"〶 Acción Realizada :\n"
+            f"⋗ {action_text}"
+        )
+        
+        await status_msg.edit_text(final_text)
         
     except Exception as e:
         await status_msg.edit_text(f"❌ **Error:** {str(e)}")
@@ -86,8 +113,11 @@ async def leech_cmd(client, message):
             await user_client.stop()
             
     finally:
-        # Limpieza de servidor
-        if 'file_path' in locals() and os.path.exists(file_path):
+        # Limpieza de servidor segura
+        if file_path and os.path.exists(file_path):
             os.remove(file_path)
-        if 'thumb_path' in locals() and thumb_path and os.path.exists(thumb_path):
+            print(f"🗑 Archivo eliminado: {file_path}")
+            
+        if thumb_path and os.path.exists(thumb_path):
             os.remove(thumb_path)
+            print(f"🗑 Miniatura eliminada: {thumb_path}")
