@@ -1,11 +1,20 @@
+version: '3.8'
+
 services:
-  telegram-bot:
+  leechbot:
     build: .
-    container_name: sesionstring_bot
+    container_name: mi_leech_bot
     restart: unless-stopped
-    env_file:
-      - .env
+    ports:
+      - "8080:8080"
+    environment:
+      - API_ID=${API_ID}
+      - API_HASH=${API_HASH}
+      - BOT_TOKEN=${BOT_TOKEN}
+      - OWNER_STRING=${OWNER_STRING}
+      - AUTH_GROUP_ID=${AUTH_GROUP_ID}
+      - DUMP_CHANNEL_ID=${DUMP_CHANNEL_ID}
+      - MONGO_URI=${MONGO_URI}
+      - PORT=8080
     volumes:
-      - ./sessions:/app/sessions
       - ./downloads:/app/downloads
-      
