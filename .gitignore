@@ -1,0 +1,23 @@
+# Archivos de entorno y credenciales (¡MUY IMPORTANTE NO SUBIR ESTO!)
+.env
+*.session
+*.session-journal
+
+# Carpetas de descargas temporales
+downloads/
+/downloads/*
+
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entornos virtuales
+venv/
+env/
+.venv/
+
+# Archivos de sistemas operativos y editores (opcional pero recomendado)
+.DS_Store
+.vscode/
+.idea/
