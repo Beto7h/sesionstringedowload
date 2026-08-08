@@ -3,8 +3,7 @@ import time
 from pyrogram import Client, filters
 from config import Config
 from database import get_user_config
-from utils import progress_bar, format_bytes, format_time # <-- Importaciones actualizadas
-import wzgram # Asumiendo que esta es tu librería de subida
+from utils import progress_bar, format_bytes, format_time
 
 # Cliente extra con la cuenta premium del DUEÑO para archivos pesados
 owner_client = Client("owner_session", session_string=Config.OWNER_STRING, api_id=Config.API_ID, api_hash=Config.API_HASH)
@@ -12,14 +11,19 @@ owner_client = Client("owner_session", session_string=Config.OWNER_STRING, api_i
 @Client.on_message(filters.command("leech") & filters.chat(Config.AUTH_GROUP_ID))
 async def leech_cmd(client, message):
     if len(message.command) < 2:
-        return await message.reply_text("❌ Debes enviar un link. Ejemplo: `/leech https://t.me/c/123/45`")
+        return await message.reply_text(
+            "📥 **Menú de Leech / Descargas**\n\n"
+            "Para iniciar una tarea, debes enviar el comando acompañado de un enlace de Telegram.\n"
+            "• **Ejemplo:** `/leech https://t.me/c/123456789/45`\n\n"
+            "⚙️ *Asegúrate de configurar tus opciones primero con `/useting`*."
+        )
         
     link = message.command[1]
     user_id = message.from_user.id
     config = await get_user_config(user_id)
     
     if not config.get("string_session"):
-        return await message.reply_text("❌ No tienes una sesión registrada. Usa /useting.")
+        return await message.reply_text("❌ No tienes una sesión registrada. Usa `/useting` para configurarla.")
 
     # Crear cliente temporal con la sesión del usuario
     user_client = Client("temp_user", session_string=config["string_session"], api_id=Config.API_ID, api_hash=Config.API_HASH)
@@ -46,12 +50,12 @@ async def leech_cmd(client, message):
         
         start_time = time.time()
         
-        # 1. DESCARGA
+        # 1. DESCARGA CON PROGRESO EN TIEMPO REAL
         file_path = await user_client.download_media(
             msg_to_download, 
             file_name=f"downloads/{file_name}",
             progress=progress_bar,
-            progress_args=(status_msg, start_time, file_name, message.from_user.first_name, user_id)
+            progress_args=(status_msg, start_time, "Descargando", file_name, message.from_user.first_name, user_id)
         )
         await user_client.stop()
 
@@ -64,8 +68,8 @@ async def leech_cmd(client, message):
         # 3. DESTINO (Grupo o PM)
         target_chat = user_id if config.get("pm_mode") else message.chat.id
 
-        # 4. LÓGICA DE SUBIDA (Menos o más de 2GB)
-        await status_msg.edit_text("⬆️ **Subiendo archivo...**")
+        # 4. LÓGICA DE SUBIDA CON PROGRESO EN TIEMPO REAL (> 2GB o < 2GB)
+        start_time_upload = time.time()
         
         if file_size > 2 * 1024 * 1024 * 1024:
             # Archivo > 2GB: Subir al Dump Channel con la sesión Premium del dueño
@@ -73,17 +77,21 @@ async def leech_cmd(client, message):
             uploaded_msg = await owner_client.send_document(
                 chat_id=Config.DUMP_CHANNEL_ID,
                 document=file_path,
-                thumb=thumb_path
+                thumb=thumb_path,
+                progress=progress_bar,
+                progress_args=(status_msg, start_time_upload, "Subiendo (Dueño)", file_name, message.from_user.first_name, user_id)
             )
             # Reenviar desde el canal Dump al usuario/grupo con el Bot
             await client.copy_message(chat_id=target_chat, from_chat_id=Config.DUMP_CHANNEL_ID, message_id=uploaded_msg.id)
             await owner_client.stop()
         else:
-            # Archivo < 2GB: Subida normal (Puedes integrar wzgram aquí si lo prefieres)
+            # Archivo < 2GB: Subida normal con el bot principal
             await client.send_document(
                 chat_id=target_chat,
                 document=file_path,
-                thumb=thumb_path
+                thumb=thumb_path,
+                progress=progress_bar,
+                progress_args=(status_msg, start_time_upload, "Subiendo", file_name, message.from_user.first_name, user_id)
             )
 
         # 5. MENSAJE FINAL
